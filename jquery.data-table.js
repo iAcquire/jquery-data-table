@@ -1,5 +1,5 @@
 /*!
- * jQuery Data Table Plugin v1.5.3a
+ * jQuery Data Table Plugin v1.5.4a
  *
  * Author: Jeff Dupont
  * ==========================================================
@@ -31,6 +31,7 @@
     this.rows = [];
     this.buttons = [];
 
+    // this needs to be handled better
     this.localStorageId = "datatable_" + (options.id || options.url.replace(/\W/ig, '_'))
 
     // set the defaults for the column options array
@@ -135,7 +136,7 @@
                 if(res.currentPage) o.currentPage = parseInt(res.currentPage);
 
                 // retrieve the saved columns
-                _retrieveColumns.call(that, localStorage['boo'])//that.localStorageId])
+                _retrieveColumns.call(that, localStorage[that.localStorageId])
 
                 // append the table
                 $e.append(that.table());
@@ -257,6 +258,8 @@
           , that = this
 
         start = (o.currentPage * o.perPage) - o.perPage + 1
+        if(start < 1) start = 1;
+
         end = (o.currentPage * o.perPage)
         if(end > o.totalRows) end = o.totalRows
 
@@ -421,12 +424,12 @@
 
         // preprocess on the cell data for a column
         if(o.columns[column].callback && typeof o.columns[column].callback === "function")
-          celldata = o.columns[column].callback( data, o.columns[column] )
+          celldata = o.columns[column].callback.call( $cell, data, o.columns[column] )
 
         $cell
           .data("cell_properties", o.columns[column])
           .addClass(o.columns[column].classname)
-          .html(celldata || "&nbsp;")
+          .append(celldata || "&nbsp;")
 
         if(o.columns[column].css) $cell.css(o.columns[column].css);
 
@@ -667,23 +670,46 @@
       this.$column_modalfooter = $("<div></div>")
         .addClass("modal-footer")
         .append(
-          o.allowSaveColumns ? $("<a></a>")
-            .attr("href", "#")
-            .addClass("btn btn-primary")
-            .text("Save")
-            .click(function() {
-              _saveColumns.call(that)
-              return false;
-            }) : "",
+            // show the check 'all / none' columns
+            $('<div class="pull-left"></div>')
+              .append(
+                $('<div class="btn-group"></div>')
+                  .append(
+                      $('<a href="#" class="btn">Check All</a>')
+                        .click(function() {
+                          $(this).closest(".modal").find('a.active > i.icon-remove').each(function(){
+                            $(this).parent().click();
+                          })
+                          return false;
+                        })
 
-          $("<a></a>")
-            .attr("href", "#")
-            .addClass("btn")
-            .text("Close")
-            .click(function() {
-              that.$column_modal.modal('hide')
-              return false;
-            })
+                    , $('<a href="#" class="btn">None</a>')
+                        .click(function() {
+                          $(this).closest(".modal").find('a.active > i.icon-ok').each(function(){
+                            $(this).parent().click();
+                          })
+                          return false;
+                        })
+                  )
+              )
+
+          , o.allowSaveColumns ? $("<a></a>")
+              .attr("href", "#")
+              .addClass("btn btn-primary")
+              .text("Save")
+              .click(function() {
+                _saveColumns.call(that)
+                return false;
+              }) : ""
+
+          , $("<a></a>")
+              .attr("href", "#")
+              .addClass("btn")
+              .text("Close")
+              .click(function() {
+                that.$column_modal.modal('hide')
+                return false;
+              })
         )
 
       // render the modal body
@@ -731,8 +757,16 @@
       .attr("href", "#")
       .html("<i class=\"icon-filter\"></i>")
       .click(function() {
-        $(o.filterModal)
-          .modal();
+        if($(o.filterModal).hasClass("modal"))
+          $(o.filterModal)
+            .modal();
+        else if($(o.filterModal).is(":visible"))
+          $(o.filterModal)
+            .hide();
+        else
+          $(o.filterModal)
+            .show();
+
         return false;
       })
     this.buttons.unshift($toggle);
@@ -986,6 +1020,9 @@
     var o = this.options
       , columns = data ? JSON.parse(data) : []
       , res = this.resultset
+
+    // if the server doesn't pass the column property back
+    if(!res.columns) res.columns = [];
 
     for(column in o.columns) {
       o.columns[column] = $.extend({}, o.columns[column], res.columns[column], columns[column]);
