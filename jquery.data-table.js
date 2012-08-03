@@ -1,5 +1,5 @@
 /*!
- * jQuery Data Table Plugin v1.5.4a
+ * jQuery Data Table Plugin v1.5.5a
  *
  * Author: Jeff Dupont
  * ==========================================================
@@ -522,6 +522,7 @@
                   .text("Prev")
                   .click(function() {
                     o.currentPage -= 1
+                    o.currentPage = o.currentPage >= 1 ? o.currentPage : 1
                     that.render();
                     return false;
                   })
@@ -533,6 +534,7 @@
                   .text("Next")
                   .click(function() {
                     o.currentPage += 1
+                    o.currentPage = o.currentPage <= o.pageCount? o.currentPage : o.pageCount
                     that.render();
                     return false;
                   })
@@ -730,6 +732,7 @@
     $toggle
       .addClass("btn")
       .data("toggle", "modal")
+      .attr("title", "Choose which columns you would like to display.")
       .attr("href", "#" + this.$column_modal.attr("id"))
       .html("<i class=\"icon-cog\"></i>")
       .click(function(e) {
@@ -755,6 +758,7 @@
       .addClass("btn")
       .data("toggle", "modal")
       .attr("href", "#")
+      .attr("title", "Open the filter dialog.")
       .html("<i class=\"icon-filter\"></i>")
       .click(function() {
         if($(o.filterModal).hasClass("modal"))
@@ -780,6 +784,7 @@
     // per page options and current filter/sorting
     var $perpage_select = $("<a></a>")
       .addClass("btn dropdown-toggle")
+      .attr("title", "Change the number of rows per page.")
       .attr("data-toggle", "dropdown")
       .html(o.perPage + "&nbsp;")
       .css({ fontWeight: 'normal' })
@@ -863,6 +868,7 @@
     $overflow
       .addClass("btn")
       .attr("href", "#")
+      .attr("title", "Toggle the size of the table to fit the data or to fit the screen.")
       .html("<i class=\"icon-resize-full\"></i>")
       .click(function() {
         _toggleOverflow.call(this, $wrapper);
@@ -901,7 +907,7 @@
     // the offset
     var offset = o.currentPage * o.perPage
     while(offset > o.totalRows) {
-      o.currentPage--;
+      if(o.currentPage > 1) o.currentPage--;
       offset = o.currentPage * o.perPage
     }
 
