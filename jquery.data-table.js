@@ -330,14 +330,26 @@
       }
 
     , footer: function () {
-        var res = this.resultset
+        var o = this.options
+          , res = this.resultset
 
         if(!this.$footer) {
           this.$footer = $('<tfoot></tfoot>')
 
+          // loop through the columns
+          for(column in o.columns) {
+            var $cell = $('<td></td>')
+
+            $cell
+              .data("cell_properties", o.columns[column])
+              .addClass(o.columns[column].classname)
+
+            this.$footer.append($cell);
+          }
+
           // any final user adjustments to the footer
           if(o.footerCallback && typeof o.footerCallback === 'function')
-            o.footerCallback.call(this)
+            o.footerCallback.call(this, this.resultset.footer)
 
           this.$table
             .append(this.$footer);
