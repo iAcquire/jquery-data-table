@@ -907,9 +907,10 @@
     // the offset
     var offset = o.currentPage * o.perPage
     while(offset > o.totalRows) {
-      if(o.currentPage > 1) o.currentPage--;
+      o.currentPage--;
       offset = o.currentPage * o.perPage
     }
+    if(o.currentPage < 1) o.currentPage = 1;
 
     if($(this).popover) $(this).popover('hide')
 
