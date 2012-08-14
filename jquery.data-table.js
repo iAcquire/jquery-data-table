@@ -112,14 +112,9 @@
             , success: function( res ) {
                 if(o.debug) console.log(res);
 
-                if(!res || res === undefined) {
-                  showError.call(that);
-                  return;
-                }
-
                 that.resultset = res;
 
-                if(!res.data || res.data.length == 0) {
+                if(!res || res === undefined || !res.data || res.data.length == 0) {
                   showError.call(that);
                   return;
                 }
@@ -244,7 +239,14 @@
           $e.before(this.$section_header)
         }
         else {
-          this.$section_header.append(this.$toolbar)
+            if(!this.$toolbar_container) {
+              this.$toolbar_container = $("<div></div>")
+                .addClass('dt-toolbar-container clearfix')
+            }
+            $e.prepend(
+              this.$toolbar_container
+                .append(this.$toolbar)
+            );
         }
 
         return this.$toolbar
@@ -620,6 +622,15 @@
         return this.$pagination;
       }
 
+    , remove: function() {
+        var $e = this.$element
+
+        if(this.$section_header) this.$section_header.remove();
+
+        $e.data("datatable", null);
+        $e.empty();
+      }
+
   };
 
 
@@ -883,9 +894,14 @@
       .attr("title", "Toggle the size of the table to fit the data or to fit the screen.")
       .html("<i class=\"icon-resize-full\"></i>")
       .click(function() {
-        _toggleOverflow.call(this, $wrapper);
+        if($wrapper) _toggleOverflow.call(this, $wrapper);
         return false;
       })
+
+    if(!this.resultset || !this.resultset.data || this.resultset.data.length == 0)
+      $overflow
+        .addClass("disabled")
+
     this.buttons.push($overflow)
   }
 
@@ -936,6 +952,8 @@
     var o = this.options
       , $e = this.$element
 
+    $e.empty();
+
     // initialize the toolbar
     _initToolbar.call(this)
 
@@ -945,7 +963,6 @@
 
     this.loading( false );
 
-    $e.empty();
     if(this.$default) $e.append(this.$default);
   }
 
